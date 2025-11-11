@@ -29,15 +29,19 @@ def repeat(elem, n=None):
 def accumulate(
     iterable, function=lambda x, y: x + y, *, initial=None, __SENTINEL=object()
 ):
-    iterator = iter(iterable)
-    total = initial if initial is not None else next(iterator, __SENTINEL)
-    if total is not __SENTINEL:
-        yield total
-        yield  from 
-        ###
-        for element in iterator:
-            total = function(total, element)
-            yield total
+    (
+        (iterator := iter(iterable)),
+        (total := initial if initial is not None else next(iterator, __SENTINEL)),
+        (
+            () if total is __SENTINEL else (yield total),
+            (yield from (total := function(total, element) for element in iterator)),
+        ),
+    )
 
 
-print(accumulate([1, 2, 3, 4]))  # Output: <generator object ...>
+def batched(p, n, __SENTINEL=object()):
+    (
+        (iterator := iter(p)),
+        (yield tuple(iter((next(iterator, __SENTINEL) for _ in range(n)), __SENTINEL))),
+        (yield from batched(iterator, n)),
+    )
